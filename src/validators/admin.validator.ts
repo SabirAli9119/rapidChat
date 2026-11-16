@@ -95,6 +95,13 @@ export const listSecurityEventsSchema = z.object({
   }),
 });
 
+/** GET /api/v1/admin/security/summary?hours=24 */
+export const securitySummarySchema = z.object({
+  query: z.object({
+    hours: z.coerce.number().int().min(1).max(720).default(24),
+  }),
+});
+
 export type ListUsersQuery = z.infer<typeof listUsersSchema>['query'];
 export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>['body'];
 export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>['body'];
