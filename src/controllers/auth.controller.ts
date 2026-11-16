@@ -138,5 +138,5 @@ export const logoutOtherSessions = asyncHandler(async (req: Request, res: Respon
   ApiResponse.ok(res, { sessionsRevoked }, 'Other devices logged out');
 });
 
-//testing
+//testing git remote repo
 console.log("hello");
