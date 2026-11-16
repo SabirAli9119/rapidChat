@@ -120,3 +120,13 @@ export const uploadRateLimit = lazy(() =>
     keyByUser: true,
   }),
 );
+/** Location updates and nearby searches: 60 per 10 minutes per user. Use AFTER authenticate. */
+export const nearbyRateLimit = lazy(() =>
+  buildLimiter({
+    name: 'nearby',
+    windowMs: 10 * MINUTE_MS,
+    limit: 60,
+    message: 'Too many location requests, please wait a few minutes',
+    keyByUser: true,
+  }),
+);
