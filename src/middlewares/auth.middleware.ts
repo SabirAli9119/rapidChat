@@ -63,7 +63,7 @@ export async function resolveUserFromAccessToken(token: string): Promise<Authent
 }
 
 /** The token comes from the HTTP-only cookie (browsers) or an "Authorization: Bearer" header (Postman, mobile). */
-function extractAccessToken(req: Request): string | null {
+export function extractAccessToken(req: Request): string | null {
   const cookieToken: unknown = req.cookies?.[ACCESS_COOKIE_NAME];
   if (typeof cookieToken === 'string' && cookieToken.length > 0) return cookieToken;
 
