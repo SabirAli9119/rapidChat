@@ -212,7 +212,10 @@ export interface ServerToClientEvents {
   typing_start: (payload: { roomId: string; userId: string }) => void;
   typing_stop: (payload: { roomId: string; userId: string }) => void;
   user_online: (payload: { userId: string }) => void;
-  user_offline: (payload: { userId: string; lastSeenAt: string }) => void;
+  // user_offline: (payload: { userId: string; lastSeenAt: string }) => void;
+    user_offline: (payload: { userId: string; lastSeenAt: string | null }) => void;
+  /** The server is ending this connection (logged out, banned, session expired...). Send the user to the login screen. */
+  session_ended: (payload: { code: string }) => void;
   notification: (notification: NotificationDTO) => void;
 }
 

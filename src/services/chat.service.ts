@@ -186,3 +186,27 @@ export async function listRooms(
 
   return buildPageResult(await buildRoomDTOs(rooms, userId), total, page, limit);
 }
+
+/** Everyone the user has a chat room with, excluding people blocked in either direction. */
+export async function listContactIds(userId: string): Promise<string[]> {
+  const blocked = new Set((await getBlockedUserIds(userId)).map(String));
+  const rooms = await ChatRoom.find({ participants: userId })
+    .select('participants')
+    .lean<Pick<IChatRoom, 'participants'>[]>();
+
+  const contacts = new Set<string>();
+  for (const room of rooms) {
+    const otherId = getOtherParticipantId(room, userId);
+    if (otherId && !blocked.has(otherId)) contacts.add(otherId);
+  }
+  return [...contacts];
+}
+
+/** The two participants of each room. Unknown room ids are left out. */
+export async function getParticipantsByRoom(roomIds: string[]): Promise<Map<string, string[]>> {
+  if (roomIds.length === 0) return new Map();
+  const rooms = await ChatRoom.find({ _id: { $in: roomIds } })
+    .select('participants')
+    .lean<Pick<IChatRoom, '_id' | 'participants'>[]>();
+  return new Map(rooms.map((room) => [String(room._id), room.participants.map(String)]));
+}

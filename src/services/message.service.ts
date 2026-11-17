@@ -7,6 +7,8 @@ import { logger } from '../utils/logger';
 import type { SendMessageInput } from '../validators/message.validator';
 import { assertRoomAccess, isRoomMember, touchRoom } from './chat.service';
 import { claimMediaForMessage, releaseMedia, toMediaDTO } from './media.service';
+import { ChatRoom } from '../models/ChatRoom.model';
+import { getBlockedUserIds } from './block.service';
 
 export interface SentMessage {
   message: MessageDTO;
@@ -202,4 +204,38 @@ export async function expireMessages(batchSize = 500): Promise<{ messageId: stri
 
   await Message.deleteMany({ _id: { $in: expired.map((m) => m._id) } });
   return expired.map((m) => ({ messageId: String(m._id), roomId: String(m.roomId) }));
+}
+
+/** Marks every waiting message addressed to this user as delivered (called when they connect). */
+export async function markAllMessagesDelivered(recipientId: string): Promise<DeliveryInfo[]> {
+  const blockedIds = await getBlockedUserIds(recipientId);
+  const rooms = await ChatRoom.find({
+    $and: [{ participants: new Types.ObjectId(recipientId) }, { participants: { $nin: blockedIds } }],
+  })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId }[]>();
+  if (rooms.length === 0) return [];
+
+  const waiting = await Message.find({
+    roomId: { $in: rooms.map((room) => room._id) },
+    senderId: { $ne: recipientId },
+    status: 'sent',
+    ...notExpiredFilter(),
+  })
+    .select('_id roomId senderId')
+    .lean<Pick<IMessage, '_id' | 'roomId' | 'senderId'>[]>();
+  if (waiting.length === 0) return [];
+
+  const deliveredAt = new Date();
+  await Message.updateMany(
+    { _id: { $in: waiting.map((m) => m._id) }, status: 'sent' },
+    { $set: { status: 'delivered', deliveredAt } },
+  );
+
+  return waiting.map((m) => ({
+    messageId: String(m._id),
+    roomId: String(m.roomId),
+    senderId: String(m.senderId),
+    deliveredAt: deliveredAt.toISOString(),
+  }));
 }
