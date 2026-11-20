@@ -50,9 +50,19 @@ export async function connectRedis(): Promise<void> {
 }
 
 /** Closes the general Redis client (used during graceful shutdown and tests). */
+// export async function disconnectRedis(): Promise<void> {
+//   if (redis.status !== 'end') {
+//     await redis.quit();
+//   }
+//   logger.info('Redis connection closed');
+// }
+
+
 export async function disconnectRedis(): Promise<void> {
-  if (redis.status !== 'end') {
-    await redis.quit();
+  if (redis.status === 'ready') {
+    await redis.quit(); // finishes pending commands, then closes
+  } else if (redis.status !== 'end') {
+    redis.disconnect(); // never connected, or the connection was lost: close immediately
   }
   logger.info('Redis connection closed');
 }

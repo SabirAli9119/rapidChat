@@ -124,7 +124,7 @@ async function deliver(to: string, content: MailContent): Promise<boolean> {
     // Development convenience: show the email (and its link) in the terminal
     logger.info(
       { to, subject: content.subject, text: content.text },
-      '📧 SMTP not configured: email NOT sent, printing it here instead',
+        'SMTP not configured: email NOT sent, printing it here instead',
     );
     return true;
   }
